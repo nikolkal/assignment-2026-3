@@ -57,17 +57,33 @@ def digit_difference(source_digit, target_digit):
     return additions, removals
 
 
+# build all possible digit transitions
+def build_transitions():
+    transitions = {}
+
+    for source in range(10):
+        transitions[source] = {}
+
+        for target in range(10):
+            additions, removals = digit_difference(source, target)
+
+            transitions[source][target] = {
+                "add": len(additions),
+                "remove": len(removals),
+                "delta": len(additions) - len(removals)
+            }
+
+    return transitions
+
+
 def main():
     args = get_args()
 
     left, operator, right, result = parse_problem(args.problem)
 
-    # small test for digit transition
-    additions, removals = digit_difference(1, 4)
+    transitions = build_transitions()
 
-    print("1 -> 4")
-    print("add:", additions)
-    print("remove:", removals)
+    print("1 -> 4:", transitions[1][4])
 
     output = {
         "problem": args.problem,
