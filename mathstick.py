@@ -20,14 +20,19 @@ DIGITS = {
 
 
 def get_args():
+
     parser = argparse.ArgumentParser()
+
     parser.add_argument("--problem", required=True)
     parser.add_argument("--max-k", type=int, default=2)
+
     return parser.parse_args()
 
 
 def parse_problem(problem):
+
     pattern = r"^\s*(\d+)\s*([+\-])\s*(\d+)\s*=\s*(\d+)\s*$"
+
     match = re.match(pattern, problem)
 
     if not match:
@@ -43,11 +48,13 @@ def parse_problem(problem):
 
 # return the segments used by a digit
 def get_segments(digit):
+
     return DIGITS[int(digit)]
 
 
 # calculate additions and removals
 def digit_difference(source_digit, target_digit):
+
     source_segments = get_segments(source_digit)
     target_segments = get_segments(target_digit)
 
@@ -59,13 +66,19 @@ def digit_difference(source_digit, target_digit):
 
 # build all possible digit transitions
 def build_transitions():
+
     transitions = {}
 
     for source in range(10):
+
         transitions[source] = {}
 
         for target in range(10):
-            additions, removals = digit_difference(source, target)
+
+            additions, removals = digit_difference(
+                source,
+                target
+            )
 
             transitions[source][target] = {
                 "add": len(additions),
@@ -76,26 +89,70 @@ def build_transitions():
     return transitions
 
 
+# find all possible transformations of a digit
+def get_digit_moves(digit, transitions):
+
+    moves = []
+
+    for target in range(10):
+
+        info = transitions[digit][target]
+
+        moves.append({
+            "target": target,
+            "add": info["add"],
+            "remove": info["remove"],
+            "delta": info["delta"]
+        })
+
+    return moves
+
+
 def main():
+
     args = get_args()
 
-    left, operator, right, result = parse_problem(args.problem)
+    left, operator, right, result = parse_problem(
+        args.problem
+    )
 
     transitions = build_transitions()
 
-    print("1 -> 4:", transitions[1][4])
+    moves = get_digit_moves(1, transitions)
+
+    print("Possible moves from digit 1:")
+    print(moves[:5])
 
     output = {
         "problem": args.problem,
         "max_k": args.max_k,
-        "counts": {str(k): 0 for k in range(1, args.max_k + 1)},
+        "counts": {
+            str(k): 0
+            for k in range(
+                1,
+                args.max_k + 1
+            )
+        },
         "nodes_visited": 0,
         "nodes_pruned": 0,
-        "solutions": {str(k): [] for k in range(1, args.max_k + 1)}
+        "solutions": {
+            str(k): []
+            for k in range(
+                1,
+                args.max_k + 1
+            )
+        }
     }
 
-    print(json.dumps(output, indent=2, ensure_ascii=False))
+    print(
+        json.dumps(
+            output,
+            indent=2,
+            ensure_ascii=False
+        )
+    )
 
 
 if __name__ == "__main__":
+
     main()
