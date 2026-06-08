@@ -108,6 +108,31 @@ def get_digit_moves(digit, transitions):
     return moves
 
 
+# build a state from the parsed equation
+def build_state(left, operator, right, result):
+
+    return {
+        "left": left,
+        "operator": operator,
+        "right": right,
+        "result": result
+    }
+
+
+# convert state back to equation string
+def state_to_string(state):
+
+    return (
+        state["left"]
+        + " "
+        + state["operator"]
+        + " "
+        + state["right"]
+        + " = "
+        + state["result"]
+    )
+
+
 def main():
 
     args = get_args()
@@ -118,10 +143,16 @@ def main():
 
     transitions = build_transitions()
 
-    moves = get_digit_moves(1, transitions)
+    state = build_state(
+        left,
+        operator,
+        right,
+        result
+    )
 
-    print("Possible moves from digit 1:")
-    print(moves[:5])
+    print(
+        state_to_string(state)
+    )
 
     output = {
         "problem": args.problem,
