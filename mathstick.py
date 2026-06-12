@@ -144,6 +144,27 @@ def build_slots(state):
     return slots
 
 
+# generate possible moves for every slot
+def generate_slot_moves(state, transitions):
+    slots = build_slots(state)
+
+    all_moves = []
+
+    for index, digit in enumerate(slots):
+        digit_moves = get_digit_moves(
+            int(digit),
+            transitions
+        )
+
+        all_moves.append({
+            "position": index,
+            "digit": digit,
+            "moves": digit_moves
+        })
+
+    return all_moves
+
+
 def main():
     args = get_args()
 
@@ -160,9 +181,17 @@ def main():
 
     slots = build_slots(state)
 
+    slot_moves = generate_slot_moves(
+        state,
+        transitions
+    )
+
     print(state_to_string(state))
     print("Slots:", slots)
     print("Valid:", is_valid_equation(state))
+    print("Number of slots:", len(slot_moves))
+    print("Moves for first slot:")
+    print(slot_moves[0])
 
     output = {
         "problem": args.problem,
