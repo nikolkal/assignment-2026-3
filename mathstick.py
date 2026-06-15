@@ -5,6 +5,8 @@ import sys
 
 
 # seven segment representation
+# segment 0 is the middle horizontal segment
+# segments 1-6 go clockwise starting from the top
 DIGITS = {
     0: {1, 2, 3, 4, 5, 6},
     1: {2, 3},
@@ -165,6 +167,34 @@ def generate_slot_moves(state, transitions):
     return all_moves
 
 
+# apply a digit transformation to a slot
+def apply_move(state, position, new_digit):
+    left = list(state["left"])
+    right = list(state["right"])
+    result = list(state["result"])
+
+    left_size = len(left)
+    right_size = len(right)
+
+    if position < left_size:
+        left[position] = str(new_digit)
+
+    elif position < left_size + right_size:
+        index = position - left_size
+        right[index] = str(new_digit)
+
+    else:
+        index = position - left_size - right_size
+        result[index] = str(new_digit)
+
+    return {
+        "left": "".join(left),
+        "operator": state["operator"],
+        "right": "".join(right),
+        "result": "".join(result)
+    }
+
+
 def main():
     args = get_args()
 
@@ -192,6 +222,15 @@ def main():
     print("Number of slots:", len(slot_moves))
     print("Moves for first slot:")
     print(slot_moves[0])
+
+    new_state = apply_move(
+        state,
+        0,
+        7
+    )
+
+    print("After move:")
+    print(state_to_string(new_state))
 
     output = {
         "problem": args.problem,
