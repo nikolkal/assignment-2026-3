@@ -1,7 +1,6 @@
 import argparse
 import json
 import re
-import sys
 
 
 # seven segment representation
@@ -43,12 +42,10 @@ def parse_problem(problem):
     return left, operator, right, result
 
 
-# return the segments used by a digit
 def get_segments(digit):
     return DIGITS[int(digit)]
 
 
-# calculate additions and removals
 def digit_difference(source_digit, target_digit):
     source_segments = get_segments(source_digit)
     target_segments = get_segments(target_digit)
@@ -59,7 +56,6 @@ def digit_difference(source_digit, target_digit):
     return additions, removals
 
 
-# build all possible digit transitions
 def build_transitions():
     transitions = {}
 
@@ -78,7 +74,6 @@ def build_transitions():
     return transitions
 
 
-# find all possible transformations of a digit
 def get_digit_moves(digit, transitions):
     moves = []
 
@@ -95,7 +90,6 @@ def get_digit_moves(digit, transitions):
     return moves
 
 
-# build a state from the parsed equation
 def build_state(left, operator, right, result):
     return {
         "left": left,
@@ -105,7 +99,6 @@ def build_state(left, operator, right, result):
     }
 
 
-# convert state back to equation string
 def state_to_string(state):
     return (
         state["left"]
@@ -118,7 +111,6 @@ def state_to_string(state):
     )
 
 
-# check if an equation is mathematically correct
 def is_valid_equation(state):
     left = int(state["left"])
     right = int(state["right"])
@@ -130,7 +122,6 @@ def is_valid_equation(state):
     return left - right == result
 
 
-# create digit slots from left to right
 def build_slots(state):
     slots = []
 
@@ -146,10 +137,8 @@ def build_slots(state):
     return slots
 
 
-# generate possible moves for every slot
 def generate_slot_moves(state, transitions):
     slots = build_slots(state)
-
     all_moves = []
 
     for index, digit in enumerate(slots):
@@ -167,7 +156,6 @@ def generate_slot_moves(state, transitions):
     return all_moves
 
 
-# apply a digit transformation to a slot
 def apply_move(state, position, new_digit):
     left = list(state["left"])
     right = list(state["right"])
@@ -178,11 +166,9 @@ def apply_move(state, position, new_digit):
 
     if position < left_size:
         left[position] = str(new_digit)
-
     elif position < left_size + right_size:
         index = position - left_size
         right[index] = str(new_digit)
-
     else:
         index = position - left_size - right_size
         result[index] = str(new_digit)
@@ -195,10 +181,117 @@ def apply_move(state, position, new_digit):
     }
 
 
+# operator changes: try target + and target -
+def operator_cost(source_operator, target_operator):
+    if source_operator == target_operator:
+        return 0, 0, 0
+
+    if source_operator == "-" and target_operator == "+":
+        operator_add = 1
+        operator_remove = 0
+    elif source_operator == "+" and target_operator == "-":
+        operator_add = 0
+        operator_remove = 1
+    else:
+        operator_add = 0
+        operator_remove = 0
+
+    operator_delta = operator_remove - operator_add
+
+    return operator_add, operator_remove, operator_delta
+
+
+def build_operator_options(source_operator):
+    options = []
+
+    for target_operator in ["+", "-"]:
+        operator_add, operator_remove, operator_delta = operator_cost(
+            source_operator,
+            target_operator
+        )
+
+        options.append({
+            "operator": target_operator,
+            "operator_add": operator_add,
+            "operator_remove": operator_remove,
+            "operator_delta": operator_delta
+        })
+
+    return options
+
+
+def digit_delta_interval(digit, transitions, max_k):
+    values = []
+
+    for target in range(10):
+        info = transitions[int(digit)][target]
+
+        if info["add"] <= max_k and info["remove"] <= max_k:
+            values.append(info["delta"])
+
+    return min(values), max(values)
+
+
+def build_suffix_intervals(slots, transitions, max_k):
+    intervals = []
+
+    for digit in slots:
+        intervals.append(
+            digit_delta_interval(
+                digit,
+                transitions,
+                max_k
+            )
+        )
+
+    suffix = [(0, 0)] * (len(slots) + 1)
+
+    for i in range(len(slots) - 1, -1, -1):
+        current_min, current_max = intervals[i]
+        next_min, next_max = suffix[i + 1]
+
+        suffix[i] = (
+            current_min + next_min,
+            current_max + next_max
+        )
+
+    return intervals, suffix
+
+
+# first simple DFS skeleton
+def dfs_slots(index, slots, current_digits, transitions, stats):
+    stats["nodes_visited"] += 1
+
+    if index == len(slots):
+        return
+
+    digit = int(slots[index])
+
+    moves = get_digit_moves(
+        digit,
+        transitions
+    )
+
+    for move in moves:
+        current_digits.append(move["target"])
+
+        dfs_slots(
+            index + 1,
+            slots,
+            current_digits,
+            transitions,
+            stats
+        )
+
+        current_digits.pop()
+
+
 def main():
     args = get_args()
 
-    left, operator, right, result = parse_problem(args.problem)
+    left, operator, right, result = parse_problem(
+        args.problem
+    )
 
     transitions = build_transitions()
 
@@ -216,12 +309,26 @@ def main():
         transitions
     )
 
+    operator_options = build_operator_options(operator)
+
+    intervals, suffix = build_suffix_intervals(
+        slots,
+        transitions,
+        args.max_k
+    )
+
     print(state_to_string(state))
     print("Slots:", slots)
     print("Valid:", is_valid_equation(state))
     print("Number of slots:", len(slot_moves))
     print("Moves for first slot:")
     print(slot_moves[0])
+    print("Operator options:")
+    print(operator_options)
+    print("Digit intervals:")
+    print(intervals)
+    print("Suffix intervals:")
+    print(suffix)
 
     new_state = apply_move(
         state,
@@ -231,6 +338,21 @@ def main():
 
     print("After move:")
     print(state_to_string(new_state))
+
+    stats = {
+        "nodes_visited": 0,
+        "nodes_pruned": 0
+    }
+
+    dfs_slots(
+        0,
+        slots,
+        [],
+        transitions,
+        stats
+    )
+
+    print("DFS stats:", stats)
 
     output = {
         "problem": args.problem,
