@@ -275,16 +275,51 @@ def dfs_slots(index, slots, current_digits, transitions, stats):
     for move in moves:
         current_digits.append(move["target"])
 
-        dfs_slots(
+    # DFS with basic pruning
+def dfs_solve(index, slots, current_digits, transitions, suffix,
+              ta, tr, oa, or_, od, max_k, stats):
+
+    stats["nodes_visited"] += 1
+
+    if index == len(slots):
+        return
+
+    digit = int(slots[index])
+    moves = get_digit_moves(digit, transitions)
+
+    for move in moves:
+        new_ta = ta + move["add"]
+        new_tr = tr + move["remove"]
+
+        if new_ta + oa > max_k or new_tr + or_ > max_k:
+            stats["nodes_pruned"] += 1
+            continue
+
+        needed = od - (new_ta - new_tr)
+        suffix_min, suffix_max = suffix[index + 1]
+
+        if needed < suffix_min or needed > suffix_max:
+            stats["nodes_pruned"] += 1
+            continue
+
+        current_digits.append(move["target"])
+
+        dfs_solve(
             index + 1,
             slots,
             current_digits,
             transitions,
+            suffix,
+            new_ta,
+            new_tr,
+            oa,
+            or_,
+            od,
+            max_k,
             stats
         )
 
-        current_digits.pop()
-
+        current_digits.pop()    
 
 def main():
     args = get_args()
@@ -344,11 +379,20 @@ def main():
         "nodes_pruned": 0
     }
 
-    dfs_slots(
+    first_operator = operator_options[0]
+
+    dfs_solve(
         0,
         slots,
         [],
         transitions,
+        suffix,
+        0,
+        0,
+        first_operator["operator_add"],
+        first_operator["operator_remove"],
+        first_operator["operator_delta"],
+        args.max_k,
         stats
     )
 
