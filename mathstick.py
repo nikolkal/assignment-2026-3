@@ -282,17 +282,24 @@ def dfs_solve(index, slots, current_digits, transitions, suffix,
 
     if index == len(slots):
         if ta + oa == tr + or_ and ta + oa <= max_k:
+
             candidate_state = digits_to_state(
                 template_state,
                 current_digits
             )
 
-        if is_valid_equation(candidate_state):
-          stats["solutions_found"] += 1
-          stats["equations"].append(state_to_string(candidate_state))
-          stats["equations"].append(
-              state_to_string(candidate_state)
-    )
+            if is_valid_equation(candidate_state):
+
+                stats["solutions_found"] += 1
+
+                equation_text = state_to_string(
+                    candidate_state
+                )
+
+                if equation_text not in stats["equations"]:
+                    stats["equations"].append(
+                        equation_text
+                    )
 
         return
 
@@ -421,19 +428,20 @@ def main():
     print("DFS stats:", stats)
 
     output = {
-        "problem": args.problem,
-        "max_k": args.max_k,
-        "counts": {
-            str(k): 0
-            for k in range(1, args.max_k + 1)
-        },
-        "nodes_visited": stats["nodes_visited"],
-        "nodes_pruned": stats["nodes_pruned"],
-        "solutions": {
-            str(k): []
-            for k in range(1, args.max_k + 1)
-        }
+    "problem": args.problem,
+    "max_k": args.max_k,
+    "counts": {
+        "1": 0,
+        "2": len(stats["equations"])
+    },
+    "nodes_visited": stats["nodes_visited"],
+    "nodes_pruned": stats["nodes_pruned"],
+    "solutions": {
+        "1": [],
+        "2": stats["equations"]
     }
+}
+
 
     print(json.dumps(output, indent=2, ensure_ascii=False))
 
