@@ -393,23 +393,30 @@ def main():
     "solutions_found": 0,
     "equations": []
 }
-    first_operator = operator_options[0]
+    for operator_choice in operator_options:
+
+     state_with_operator = {
+        "left": state["left"],
+        "operator": operator_choice["operator"],
+        "right": state["right"],
+        "result": state["result"]
+    }
 
     dfs_solve(
-    0,
-    slots,
-    [],
-    transitions,
-    suffix,
-    0,
-    0,
-    first_operator["operator_add"],
-    first_operator["operator_remove"],
-    first_operator["operator_delta"],
-    args.max_k,
-    stats,
-    state
-)
+        0,
+        slots,
+        [],
+        transitions,
+        suffix,
+        0,
+        0,
+        operator_choice["operator_add"],
+        operator_choice["operator_remove"],
+        operator_choice["operator_delta"],
+        args.max_k,
+        stats,
+        state_with_operator
+    )
 
     print("DFS stats:", stats)
 
