@@ -258,30 +258,38 @@ def build_suffix_intervals(slots, transitions, max_k):
     return intervals, suffix
 
 
-# first simple DFS skeleton
-def dfs_slots(index, slots, current_digits, transitions, stats):
-    stats["nodes_visited"] += 1
+def digits_to_state(template_state, digits):
+    left_len = len(template_state["left"])
+    right_len = len(template_state["right"])
 
-    if index == len(slots):
-        return
+    left_digits = digits[:left_len]
+    right_digits = digits[left_len:left_len + right_len]
+    result_digits = digits[left_len + right_len:]
 
-    digit = int(slots[index])
+    return {
+        "left": "".join(str(d) for d in left_digits),
+        "operator": template_state["operator"],
+        "right": "".join(str(d) for d in right_digits),
+        "result": "".join(str(d) for d in result_digits)
+    }
 
-    moves = get_digit_moves(
-        digit,
-        transitions
-    )
 
-    for move in moves:
-        current_digits.append(move["target"])
-
-    # DFS with basic pruning
+# DFS with basic pruning
 def dfs_solve(index, slots, current_digits, transitions, suffix,
-              ta, tr, oa, or_, od, max_k, stats):
+              ta, tr, oa, or_, od, max_k, stats, template_state):
 
     stats["nodes_visited"] += 1
 
     if index == len(slots):
+        if ta + oa == tr + or_ and ta + oa <= max_k:
+            candidate_state = digits_to_state(
+                template_state,
+                current_digits
+            )
+
+            if is_valid_equation(candidate_state):
+                stats["solutions_found"] += 1
+
         return
 
     digit = int(slots[index])
@@ -316,10 +324,11 @@ def dfs_solve(index, slots, current_digits, transitions, suffix,
             or_,
             od,
             max_k,
-            stats
+            stats,
+            template_state
         )
 
-        current_digits.pop()    
+        current_digits.pop()
 
 def main():
     args = get_args()
@@ -375,26 +384,27 @@ def main():
     print(state_to_string(new_state))
 
     stats = {
-        "nodes_visited": 0,
-        "nodes_pruned": 0
-    }
-
+    "nodes_visited": 0,
+    "nodes_pruned": 0,
+    "solutions_found": 0
+}
     first_operator = operator_options[0]
 
     dfs_solve(
-        0,
-        slots,
-        [],
-        transitions,
-        suffix,
-        0,
-        0,
-        first_operator["operator_add"],
-        first_operator["operator_remove"],
-        first_operator["operator_delta"],
-        args.max_k,
-        stats
-    )
+    0,
+    slots,
+    [],
+    transitions,
+    suffix,
+    0,
+    0,
+    first_operator["operator_add"],
+    first_operator["operator_remove"],
+    first_operator["operator_delta"],
+    args.max_k,
+    stats,
+    state
+)
 
     print("DFS stats:", stats)
 
