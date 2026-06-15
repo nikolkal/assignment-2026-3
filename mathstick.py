@@ -287,8 +287,12 @@ def dfs_solve(index, slots, current_digits, transitions, suffix,
                 current_digits
             )
 
-            if is_valid_equation(candidate_state):
-                stats["solutions_found"] += 1
+        if is_valid_equation(candidate_state):
+          stats["solutions_found"] += 1
+          stats["equations"].append(state_to_string(candidate_state))
+          stats["equations"].append(
+              state_to_string(candidate_state)
+    )
 
         return
 
@@ -386,7 +390,8 @@ def main():
     stats = {
     "nodes_visited": 0,
     "nodes_pruned": 0,
-    "solutions_found": 0
+    "solutions_found": 0,
+    "equations": []
 }
     first_operator = operator_options[0]
 
@@ -415,8 +420,8 @@ def main():
             str(k): 0
             for k in range(1, args.max_k + 1)
         },
-        "nodes_visited": 0,
-        "nodes_pruned": 0,
+        "nodes_visited": stats["nodes_visited"],
+        "nodes_pruned": stats["nodes_pruned"],
         "solutions": {
             str(k): []
             for k in range(1, args.max_k + 1)
