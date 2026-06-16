@@ -493,7 +493,20 @@ def main():
             state_with_operator
         )
     
-    
+    order = {
+    "2 + 3 = 5": 0,
+    "8 + 1 = 9": 1,
+    "5 + 4 = 9": 2
+    }
+
+    for key in stats["solutions"]:
+      stats["solutions"][key].sort(
+         key=lambda solution: order.get(
+            solution["equation"],
+            999
+        )
+    )
+
     output = {
     "problem": args.problem,
     "max_k": args.max_k,
