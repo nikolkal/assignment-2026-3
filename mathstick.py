@@ -53,7 +53,10 @@ def digit_difference(source_digit, target_digit):
     additions = target_segments - source_segments
     removals = source_segments - target_segments
 
-    return additions, removals
+    return {
+        "additions": sorted(list(additions)),
+        "removals": sorted(list(removals))
+    }
 
 
 def build_transitions():
@@ -63,14 +66,19 @@ def build_transitions():
         transitions[source] = {}
 
         for target in range(10):
-            additions, removals = digit_difference(source, target)
+           
+            diff = digit_difference(source, target)
+
+            additions = diff["additions"]
+            removals = diff["removals"]
 
             transitions[source][target] = {
-                "add": len(additions),
-                "remove": len(removals),
-                "delta": len(additions) - len(removals)
-            }
-
+              "add": len(additions),
+              "remove": len(removals),
+              "delta": len(additions) - len(removals),
+              "added_segments": additions,
+              "removed_segments": removals
+}
     return transitions
 
 
@@ -81,10 +89,12 @@ def get_digit_moves(digit, transitions):
         info = transitions[digit][target]
 
         moves.append({
-            "target": target,
-            "add": info["add"],
-            "remove": info["remove"],
-            "delta": info["delta"]
+           "target": target,
+           "add": info["add"],
+           "remove": info["remove"],
+           "delta": info["delta"],
+           "added_segments": info["added_segments"],
+           "removed_segments": info["removed_segments"]
         })
 
     return moves
@@ -295,11 +305,21 @@ def dfs_solve(index, slots, current_digits, transitions, suffix,
                     candidate_state
                 )
 
-                if equation_text not in stats["solutions"][key]:
+                existing_equations = [
+                  solution["equation"]
+                  for solution in stats["solutions"][key]
+]
+
+                if equation_text not in existing_equations:
                     stats["solutions_found"] += 1
-                    stats["solutions"][key].append(
-                        equation_text
-                    )
+                    stats["solutions"][key].append({
+                         "equation": equation_text,
+                         "picks": [],
+                         "places": [],
+                         "moves": [],
+                         "nodes_visited": stats["nodes_visited"],
+                         "nodes_pruned": stats["nodes_pruned"]
+                   })
 
         return
 
