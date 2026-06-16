@@ -296,8 +296,10 @@ def digits_to_state(template_state, digits):
 
 
 # DFS with basic pruning
-def dfs_solve(index, slots, current_digits, transitions, suffix,
-              ta, tr, oa, or_, od, max_k, stats, template_state):
+def dfs_solve(index, slots, current_digits, current_path,
+              transitions, suffix,
+              ta, tr, oa, or_, od, max_k,
+              stats, template_state):
 
     stats["nodes_visited"] += 1
 
@@ -354,10 +356,18 @@ def dfs_solve(index, slots, current_digits, transitions, suffix,
 
         current_digits.append(move["target"])
 
+        current_path.append({
+           "slot": index,
+           "target": move["target"],
+           "added_segments": move["added_segments"],
+           "removed_segments": move["removed_segments"]
+        })
+
         dfs_solve(
             index + 1,
             slots,
             current_digits,
+            current_path,
             transitions,
             suffix,
             new_ta,
@@ -369,7 +379,7 @@ def dfs_solve(index, slots, current_digits, transitions, suffix,
             stats,
             template_state
         )
-
+        current_path.pop()
         current_digits.pop()
 
 def main():
@@ -425,6 +435,7 @@ def main():
     dfs_solve(
         0,
         slots,
+        [],
         [],
         transitions,
         suffix,
