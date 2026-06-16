@@ -372,27 +372,6 @@ def main():
         args.max_k
     )
 
-    print(state_to_string(state))
-    print("Slots:", slots)
-    print("Valid:", is_valid_equation(state))
-    print("Number of slots:", len(slot_moves))
-    print("Moves for first slot:")
-    print(slot_moves[0])
-    print("Operator options:")
-    print(operator_options)
-    print("Digit intervals:")
-    print(intervals)
-    print("Suffix intervals:")
-    print(suffix)
-
-    new_state = apply_move(
-        state,
-        0,
-        7
-    )
-
-    print("After move:")
-    print(state_to_string(new_state))
 
     stats = {
     "nodes_visited": 0,
@@ -428,7 +407,6 @@ def main():
         state_with_operator
     )
 
-    print("DFS stats:", stats)
 
     output = {
     "problem": args.problem,
