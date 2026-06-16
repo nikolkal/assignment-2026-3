@@ -146,6 +146,17 @@ def build_slots(state):
 
     return slots
 
+def slot_label(slot_index):
+    return chr(ord("A") + slot_index)
+
+
+def segment_labels(slot_index, segments):
+    prefix = slot_label(slot_index)
+
+    return [
+        f"{prefix}{segment}"
+        for segment in segments
+    ]
 
 def generate_slot_moves(state, transitions):
     slots = build_slots(state)
@@ -426,8 +437,8 @@ def main():
         stats,
         state_with_operator
     )
-
-
+    
+    
     output = {
     "problem": args.problem,
     "max_k": args.max_k,
