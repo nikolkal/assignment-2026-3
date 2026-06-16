@@ -282,22 +282,22 @@ def dfs_solve(index, slots, current_digits, transitions, suffix,
 
     if index == len(slots):
         if ta + oa == tr + or_ and ta + oa <= max_k:
-
             candidate_state = digits_to_state(
                 template_state,
                 current_digits
             )
 
             if is_valid_equation(candidate_state):
-
-                stats["solutions_found"] += 1
+                moves_used = ta + oa
+                key = str(moves_used)
 
                 equation_text = state_to_string(
                     candidate_state
                 )
 
-                if equation_text not in stats["equations"]:
-                    stats["equations"].append(
+                if equation_text not in stats["solutions"][key]:
+                    stats["solutions_found"] += 1
+                    stats["solutions"][key].append(
                         equation_text
                     )
 
@@ -398,7 +398,10 @@ def main():
     "nodes_visited": 0,
     "nodes_pruned": 0,
     "solutions_found": 0,
-    "equations": []
+    "solutions": {
+        str(k): []
+        for k in range(1, args.max_k + 1)
+    }
 }
     for operator_choice in operator_options:
 
@@ -431,15 +434,12 @@ def main():
     "problem": args.problem,
     "max_k": args.max_k,
     "counts": {
-        "1": 0,
-        "2": len(stats["equations"])
-    },
+     str(k): len(stats["solutions"][str(k)])
+     for k in range(1, args.max_k + 1)
+},
     "nodes_visited": stats["nodes_visited"],
     "nodes_pruned": stats["nodes_pruned"],
-    "solutions": {
-        "1": [],
-        "2": stats["equations"]
-    }
+    "solutions": stats["solutions"]
 }
 
 
