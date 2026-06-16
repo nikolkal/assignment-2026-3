@@ -158,6 +158,45 @@ def segment_labels(slot_index, segments):
         for segment in segments
     ]
 
+
+def path_to_moves(path, operator_add, operator_remove):
+    picks = []
+    places = []
+
+    for step in path:
+        slot = step["slot"]
+
+        picks.extend(
+            segment_labels(
+                slot,
+                step["removed_segments"]
+            )
+        )
+
+        places.extend(
+            segment_labels(
+                slot,
+                step["added_segments"]
+            )
+        )
+
+    if operator_remove == 1:
+        picks.append("G0")
+
+    if operator_add == 1:
+        places.append("G0")
+
+    picks.sort()
+    places.sort()
+
+    moves = [
+        f"Move({pick}, {place})"
+        for pick, place in zip(picks, places)
+    ]
+
+    return picks, places, moves
+
+
 def generate_slot_moves(state, transitions):
     slots = build_slots(state)
     all_moves = []
@@ -319,20 +358,27 @@ def dfs_solve(index, slots, current_digits, current_path,
                 )
 
                 existing_equations = [
-                  solution["equation"]
-                  for solution in stats["solutions"][key]
-]
+                    solution["equation"]
+                    for solution in stats["solutions"][key]
+                ]
 
                 if equation_text not in existing_equations:
                     stats["solutions_found"] += 1
+
+                    picks, places, moves = path_to_moves(
+                        current_path,
+                        oa,
+                        or_
+                    )
+
                     stats["solutions"][key].append({
-                         "equation": equation_text,
-                         "picks": [],
-                         "places": [],
-                         "moves": [],
-                         "nodes_visited": stats["nodes_visited"],
-                         "nodes_pruned": stats["nodes_pruned"]
-                   })
+                        "equation": equation_text,
+                        "picks": picks,
+                        "places": places,
+                        "moves": moves,
+                        "nodes_visited": stats["nodes_visited"],
+                        "nodes_pruned": stats["nodes_pruned"]
+                    })
 
         return
 
@@ -357,10 +403,10 @@ def dfs_solve(index, slots, current_digits, current_path,
         current_digits.append(move["target"])
 
         current_path.append({
-           "slot": index,
-           "target": move["target"],
-           "added_segments": move["added_segments"],
-           "removed_segments": move["removed_segments"]
+            "slot": index,
+            "target": move["target"],
+            "added_segments": move["added_segments"],
+            "removed_segments": move["removed_segments"]
         })
 
         dfs_solve(
@@ -379,6 +425,7 @@ def dfs_solve(index, slots, current_digits, current_path,
             stats,
             template_state
         )
+
         current_path.pop()
         current_digits.pop()
 
@@ -400,18 +447,15 @@ def main():
 
     slots = build_slots(state)
 
-    slot_moves = generate_slot_moves(
-        state,
-        transitions
-    )
-
     operator_options = build_operator_options(operator)
 
-    intervals, suffix = build_suffix_intervals(
-        slots,
-        transitions,
-        args.max_k
+    _, suffix = build_suffix_intervals(
+    slots,
+    transitions,
+    args.max_k
+    
     )
+    
 
 
     stats = {
@@ -425,29 +469,29 @@ def main():
 }
     for operator_choice in operator_options:
 
-     state_with_operator = {
-        "left": state["left"],
-        "operator": operator_choice["operator"],
-        "right": state["right"],
-        "result": state["result"]
-    }
+        state_with_operator = {
+            "left": state["left"],
+            "operator": operator_choice["operator"],
+            "right": state["right"],
+            "result": state["result"]
+        }
 
-    dfs_solve(
-        0,
-        slots,
-        [],
-        [],
-        transitions,
-        suffix,
-        0,
-        0,
-        operator_choice["operator_add"],
-        operator_choice["operator_remove"],
-        operator_choice["operator_delta"],
-        args.max_k,
-        stats,
-        state_with_operator
-    )
+        dfs_solve(
+            0,
+            slots,
+            [],
+            [],
+            transitions,
+            suffix,
+            0,
+            0,
+            operator_choice["operator_add"],
+            operator_choice["operator_remove"],
+            operator_choice["operator_delta"],
+            args.max_k,
+            stats,
+            state_with_operator
+        )
     
     
     output = {
